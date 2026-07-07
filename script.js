@@ -230,7 +230,14 @@
     }, 6000);
   })();
 
-  /* ============================== Contact form (FormSubmit fetch) ============================== */
+  /* ============================== Contact form ==============================
+     FormSubmit REQUIRES a native browser POST (not fetch/AJAX) to its non-
+     /ajax/ endpoint so it can run the activation flow on first submit, show
+     its built-in captcha, and redirect to _next on success.  We only enhance
+     the form here (client-side validation + placeholder detection + mailto
+     fallback).  We never call preventDefault() on a valid submission.  On
+     page load, if the URL contains #contact-success (FormSubmit redirected
+     us back after a successful submit), reveal the success banner. */
   (function contactForm() {
     const form = document.getElementById("contact-form");
     if (!form) return;
@@ -238,11 +245,22 @@
     const error = document.getElementById("contact-error");
     const submit = form.querySelector('button[type="submit"]');
 
-    form.addEventListener("submit", async (e) => {
-      // Require phone or email in addition to required HTML5 validation.
+    // If FormSubmit's _next redirected us back with the success anchor, show it.
+    if (window.location.hash === "#contact-success" && success) {
+      success.hidden = false;
+      setTimeout(() => {
+        success.scrollIntoView({
+          behavior: prefersReducedMotion ? "auto" : "smooth",
+          block: "center"
+        });
+      }, 200);
+    }
+
+    form.addEventListener("submit", (e) => {
       const phone = form.elements.phone.value.trim();
       const email = form.elements.email.value.trim();
 
+      // Client-side: require phone OR email in addition to HTML5 required fields.
       if (!phone && !email) {
         e.preventDefault();
         if (error) {
@@ -253,13 +271,14 @@
         return;
       }
 
-      // Honeypot — if filled, abort silently.
+      // Honeypot — bot filled a hidden field, silently abort.
       if (form.elements._honey && form.elements._honey.value.trim() !== "") {
         e.preventDefault();
         return;
       }
 
-      // If the form action still has the literal placeholder, fall back to a mailto draft.
+      // Placeholder not swapped — fall back to a mailto draft so the user
+      // still has a way to reach the salon.
       if (form.action.indexOf("CONTACT_EMAIL_HERE") !== -1) {
         e.preventDefault();
         const body =
@@ -276,37 +295,13 @@
         return;
       }
 
-      // Submit via fetch so we can show inline confirmation without a redirect.
-      e.preventDefault();
+      // Otherwise — do nothing.  Let the browser POST natively to FormSubmit
+      // so activation, captcha, and _next redirect all work.  Show a lightly
+      // pending state on the button so the tap feels responsive.
+      if (error) error.hidden = true;
       if (submit) {
         submit.disabled = true;
         submit.textContent = "Sending...";
-      }
-      if (error) error.hidden = true;
-
-      try {
-        const data = new FormData(form);
-        const res = await fetch(form.action, {
-          method: "POST",
-          body: data,
-          headers: { Accept: "application/json" }
-        });
-        if (!res.ok) throw new Error("Bad response");
-        form.reset();
-        if (success) {
-          success.hidden = false;
-          success.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "center" });
-        }
-      } catch (err) {
-        if (error) {
-          error.hidden = false;
-          error.textContent = "Something went wrong sending the form. Please call or use the email link below.";
-        }
-      } finally {
-        if (submit) {
-          submit.disabled = false;
-          submit.textContent = "Send Note";
-        }
       }
     });
   })();
