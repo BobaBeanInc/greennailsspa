@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /_social_preview_tmp.html
+
+Sitemap: GITHUB_PAGES_URL_HEREsitemap.xml

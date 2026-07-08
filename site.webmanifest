@@ -1,0 +1,22 @@
+{
+  "name": "Green Nails Spa",
+  "short_name": "Green Nails",
+  "description": "A calmer, cleaner nail spa experience in Concord, NC.",
+  "start_url": "./",
+  "display": "browser",
+  "orientation": "portrait",
+  "background_color": "#FAF6EF",
+  "theme_color": "#4A6046",
+  "icons": [
+    {
+      "src": "./favicon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "./apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
